@@ -11,7 +11,6 @@ class arquivos{
 
 export default class UploadFile extends LightningElement {
     @api recordId;
-    @track listFiles;
 
     @track listViewFiles = [];
     @track listViewFilesDelet = [];;
@@ -79,7 +78,6 @@ export default class UploadFile extends LightningElement {
             listFiles({
                 recordId: this.recordId
             }).then(result=>{
-                this.listFiles = result;
 
                 result.forEach(item => {
                     let arq = new arquivos();
