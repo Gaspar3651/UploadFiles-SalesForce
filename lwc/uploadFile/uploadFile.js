@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import uploadMultipleFiles from '@salesforce/apex/FileUploaderClass.uploadMultipleFiles';
 import removeFiles from '@salesforce/apex/FileUploaderClass.removeFiles';
 import listFiles from '@salesforce/apex/FileUploaderClass.listFiles';
@@ -33,6 +34,10 @@ export default class UploadFile extends LightningElement {
         });
     }
     async handleFileChange(event) {
+        this.showSpinner();
+        this.listBase64Upload = [];
+        this.listNameUpload = [];
+
         this.textFiles = await Promise.all(
             [...event.target.files].map(file => this.readFile(file))
         );
@@ -40,8 +45,9 @@ export default class UploadFile extends LightningElement {
         this.textFiles.forEach(item => {
             this.listBase64Upload.push(item.base64);
             this.listNameUpload.push(item.fileName);
-            console.log('aaaaaaaaaaaaaaa');
-        });     
+        });   
+        
+        this.closeSpinner();
     }
 
 
@@ -55,8 +61,10 @@ export default class UploadFile extends LightningElement {
         }).then(()=>{
             this.refreshComponents()
             this.closeSpinner();
+            this.showToast('Sucesso !', 'Arquivos enviados com sucesso', 'success');
         }).catch(error=>{
             console.log('uploadMultipleFiles ERROR: ' + error.body.message);
+            this.showToast('ERRO', 'Ocorreu um erro ao enviar os arquivos.\n Por favor, tente mais tarde !', 'error');
         });
         
         
@@ -158,10 +166,12 @@ export default class UploadFile extends LightningElement {
         .then(()=>{
             this.closeSpinner();
             this.listarArquivos();
+            this.showToast('Sucesso !', 'Arquivos excluidos com sucesso', 'success');
             this.refreshComponents();
         })
         .catch(error=>{
             console.log('removeFiles ERROR: ' + error.body.message);
+            this.showToast('ERRO', 'Ocorreu um erro ao enviar os arquivos.\n Por favor, tente mais tarde !', 'error');
         });
     }
 
@@ -172,6 +182,16 @@ export default class UploadFile extends LightningElement {
     }
     closeSpinner(){
         this.spinner = false;
+    }
+
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+            mode: 'dismissable'
+        });
+        this.dispatchEvent(event);
     }
 
     refreshComponents(){
