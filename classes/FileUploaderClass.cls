@@ -1,12 +1,13 @@
-/* 
-permite fazer upload de um arquivo no Salesforce fornecendo uma string base64 do arquivo, um nome para o arquivo e o ID do registro que você deseja anexar o arquivo
-
-EXEMPLO:
-FileUploaderClass.uploadFile(myBase64String, 'Invoice.pdf', '906F0000000kG2UIAU');
-*/
 public with sharing class FileUploaderClass {
     @AuraEnabled
-    public static String uploadFile(String base64, String filename, String recordId) {
+    public static void uploadMultipleFiles(List<String> listName, List<String> listBase64, Id recordId){
+        for (integer i=0; i < listName.size(); i++) {
+            uploadFile(listBase64[i], listName[i], recordId);
+        }
+    }
+
+
+    private static String uploadFile(String base64, String filename, String recordId) {
 
         ContentVersion cv = createContentVersion(base64, filename);
         ContentDocumentLink cdl = createContentLink(cv.Id, recordId);

@@ -1,8 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
-import uploadFiles from '@salesforce/apex/FileUploaderClass.uploadFile';
+import uploadMultipleFiles from '@salesforce/apex/FileUploaderClass.uploadMultipleFiles';
 import removeFiles from '@salesforce/apex/FileUploaderClass.removeFiles';
 import listFiles from '@salesforce/apex/FileUploaderClass.listFiles';
-
 
 class arquivos{
     Id;
@@ -12,6 +11,9 @@ class arquivos{
 export default class UploadFile extends LightningElement {
     @api recordId;
 
+    @track listBase64Upload = [];
+    @track listNameUpload = [];
+    
     @track listViewFiles = [];
     @track listViewFilesDelet = [];;
     listIdFilesDelet = [];
@@ -34,29 +36,29 @@ export default class UploadFile extends LightningElement {
         this.textFiles = await Promise.all(
             [...event.target.files].map(file => this.readFile(file))
         );
-        console.log(this.textFiles);       
+         
+        this.textFiles.forEach(item => {
+            this.listBase64Upload.push(item.base64);
+            this.listNameUpload.push(item.fileName);
+            console.log('aaaaaaaaaaaaaaa');
+        });     
     }
 
 
     uploadMultipleFiles(){
         this.showSpinner();
 
-        this.textFiles.forEach(item => {
-            const {base64, fileName} = item;
-            uploadFiles({ 
-                base64: base64, 
-                filename: fileName, 
-                recordId: this.recordId
-            })
-            .then(()=>{
-                this.fileData = null;
-                this.closeSpinner();
-                this.refreshComponents();
-            })
-            .catch(error=>{
-                console.log('uploadFiles ERROR: ' + error.body.message);
-            });
+        uploadMultipleFiles({
+            listName: this.listNameUpload,
+            listBase64: this.listBase64Upload,
+            recordId: this.recordId
+        }).then(()=>{
+            this.refreshComponents()
+            this.closeSpinner();
+        }).catch(error=>{
+            console.log('uploadMultipleFiles ERROR: ' + error.body.message);
         });
+        
         
         if (this.viewFiles){
             this.listarArquivos();
@@ -78,7 +80,6 @@ export default class UploadFile extends LightningElement {
             listFiles({
                 recordId: this.recordId
             }).then(result=>{
-
                 result.forEach(item => {
                     let arq = new arquivos();
                     arq.Id = item.Id;
