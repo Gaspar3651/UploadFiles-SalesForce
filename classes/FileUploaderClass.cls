@@ -1,10 +1,18 @@
 public with sharing class FileUploaderClass {
     @AuraEnabled
     public static void uploadMultipleFiles(List<String> listName, List<String> listBase64, Id recordId){
-        for (integer i=0; i < listName.size(); i++) {
-            uploadFile(listBase64[i], listName[i], recordId);
+        Savepoint sp = Database.setSavepoint();
+        
+        try {
+            for (integer i=0; i < listName.size(); i++) {
+                uploadFile(listBase64[i], listName[i], recordId);
+            }
+        } catch (Exception e) {
+            Database.rollback(sp);
+            System.debug('ERROR: Método -> FileUploaderClass.uploadMultipleFiles: \n'+ e.getMessage());
         }
     }
+    
 
 
     private static String uploadFile(String base64, String filename, String recordId) {
